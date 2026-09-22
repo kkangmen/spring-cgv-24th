@@ -27,7 +27,7 @@ public class GeneralExceptionHandler {
         log.warn("[프로젝트 지정 예외] code={}, message={}", errorCode.getCode(), errorCode.getMessage());
 
         return ResponseEntity.status(errorCode.getStatus())
-                .body(ApiResponse.onFailure(errorCode, null));
+                .body(ApiResponse.onFailure(errorCode));
     }
 
     // @ModelAttribute의 타입 변환 실패 혹은 검증 실패, @RequestBody의 검증 실패
@@ -83,9 +83,9 @@ public class GeneralExceptionHandler {
     public ResponseEntity<ApiResponse<String>> handleGlobalException(RuntimeException e){
 
         BaseErrorCode errorCode = GeneralErrorCode.INTERNAL_SERVER_ERROR;
-        log.error("[미지정 예외] code={}, message={}", errorCode.getCode(), errorCode.getMessage());
+        log.error("[미지정 예외] code={}", errorCode.getCode(), e);
 
         return ResponseEntity.status(errorCode.getStatus())
-                .body(ApiResponse.onFailure(errorCode, e.getMessage()));
+                .body(ApiResponse.onFailure(errorCode, null));
     }
 }

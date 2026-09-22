@@ -72,6 +72,6 @@ public class CinemaController {
 
         cinemaService.deleteCinema(cinemaId);
 
-        return ApiResponse.onSuccess(CinemaSuccessCode.CINEMA_DELETED, null);
+        return ApiResponse.onSuccess(CinemaSuccessCode.CINEMA_DELETED);
     }
 }

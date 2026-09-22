@@ -37,15 +37,4 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
-
-	// .env 값을 테스트 JVM 환경변수로 주입한다.
-	def envFile = file('.env')
-	if (envFile.exists()) {
-		envFile.readLines().each { line ->
-			def matcher = line =~ /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/
-			if (matcher.matches()) {
-				environment matcher.group(1), matcher.group(2).replaceAll(/^["']|["']$/, '')
-			}
-		}
-	}
 }

@@ -33,12 +33,14 @@ public class Cinema {
     private String address;
 
     @Builder
-    private Cinema(String region, String address) {
+    private Cinema(String name, String region, String address) {
+        this.name = name;
         this.region = region;
         this.address = address;
     }
 
-    public void update(String region, String address) {
+    public void update(String name, String region, String address) {
+        this.name = name;
         this.region = region;
         this.address = address;
     }

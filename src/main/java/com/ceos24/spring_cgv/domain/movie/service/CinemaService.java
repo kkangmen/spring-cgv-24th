@@ -35,6 +35,7 @@ public class CinemaService {
         }
 
         Cinema cinema = Cinema.builder()
+                .name(request.name())
                 .region(request.region())
                 .address(request.address())
                 .build();
@@ -81,7 +82,7 @@ public class CinemaService {
             throw new CinemaException(CinemaErrorCode.CINEMA_ALREADY_EXISTS);
         }
 
-        cinema.update(request.region(), request.address());
+        cinema.update(request.name(), request.region(), request.address());
 
         return CinemaResponse.from(cinema);
     }

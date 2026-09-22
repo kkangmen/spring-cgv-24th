@@ -23,6 +23,9 @@ public class Cinema {
     @Column(name = "id")
     private Long id;
 
+    @Column(name = "name", length = 50, nullable = false)
+    private String name;
+
     @Column(name = "region", length = 50, nullable = false)
     private String region;
 

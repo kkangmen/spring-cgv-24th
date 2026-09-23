@@ -5,7 +5,7 @@ import com.ceos24.spring_cgv.domain.movie.dto.request.CinemaUpdateRequest;
 import com.ceos24.spring_cgv.domain.movie.dto.response.CinemaResponse;
 import com.ceos24.spring_cgv.domain.movie.exception.code.CinemaSuccessCode;
 import com.ceos24.spring_cgv.domain.movie.service.CinemaService;
-import com.ceos24.spring_cgv.global.apiPayload.ApiResponse;
+import com.ceos24.spring_cgv.global.apipayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

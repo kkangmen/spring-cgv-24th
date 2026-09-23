@@ -1,9 +1,9 @@
-package com.ceos24.spring_cgv.global.apiPayload.handler;
+package com.ceos24.spring_cgv.global.apipayload.handler;
 
-import com.ceos24.spring_cgv.global.apiPayload.ApiResponse;
-import com.ceos24.spring_cgv.global.apiPayload.code.BaseErrorCode;
-import com.ceos24.spring_cgv.global.apiPayload.code.GeneralErrorCode;
-import com.ceos24.spring_cgv.global.apiPayload.exception.ProjectException;
+import com.ceos24.spring_cgv.global.apipayload.ApiResponse;
+import com.ceos24.spring_cgv.global.apipayload.code.BaseErrorCode;
+import com.ceos24.spring_cgv.global.apipayload.code.GeneralErrorCode;
+import com.ceos24.spring_cgv.global.apipayload.exception.ProjectException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

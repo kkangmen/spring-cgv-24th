@@ -1,7 +1,7 @@
-package com.ceos24.spring_cgv.global.apiPayload;
+package com.ceos24.spring_cgv.global.apipayload;
 
-import com.ceos24.spring_cgv.global.apiPayload.code.BaseErrorCode;
-import com.ceos24.spring_cgv.global.apiPayload.code.BaseSuccessCode;
+import com.ceos24.spring_cgv.global.apipayload.code.BaseErrorCode;
+import com.ceos24.spring_cgv.global.apipayload.code.BaseSuccessCode;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Getter;

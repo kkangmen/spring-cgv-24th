@@ -46,7 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 request.setAttribute("exception", e.getErrorCode());
             } catch (Exception e){
                 log.error("토큰 검증 중 오류가 발생했습니다.", e);
-                throw new AuthException(AuthErrorCode.UNKNOWN_TOKEN_ERROR);
+                request.setAttribute("exception", AuthErrorCode.UNKNOWN_TOKEN_ERROR);
             }
         }
 

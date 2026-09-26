@@ -7,6 +7,7 @@ import com.ceos24.spring_cgv.domain.auth.dto.response.SignUpResponse;
 import com.ceos24.spring_cgv.domain.auth.exception.AuthException;
 import com.ceos24.spring_cgv.domain.auth.exception.code.AuthErrorCode;
 import com.ceos24.spring_cgv.domain.member.entity.Member;
+import com.ceos24.spring_cgv.domain.member.enums.Role;
 import com.ceos24.spring_cgv.domain.member.repository.MemberRepository;
 import com.ceos24.spring_cgv.global.security.userdetails.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,7 @@ public class AuthService {
                         .name(request.name())
                         .email(request.email())
                         .password(passwordEncoder.encode(request.password()))
+                        .role(Role.USER)
                         .build()
         );
 

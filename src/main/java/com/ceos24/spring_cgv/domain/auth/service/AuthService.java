@@ -8,10 +8,14 @@ import com.ceos24.spring_cgv.domain.auth.exception.AuthException;
 import com.ceos24.spring_cgv.domain.auth.exception.code.AuthErrorCode;
 import com.ceos24.spring_cgv.domain.member.entity.Member;
 import com.ceos24.spring_cgv.domain.member.enums.Role;
+import com.ceos24.spring_cgv.domain.member.exception.MemberException;
+import com.ceos24.spring_cgv.domain.member.exception.code.MemberErrorCode;
 import com.ceos24.spring_cgv.domain.member.repository.MemberRepository;
 import com.ceos24.spring_cgv.global.security.userdetails.CustomUserDetails;
+import com.ceos24.spring_cgv.global.security.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,6 +34,7 @@ public class AuthService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
 
     @Transactional
     public SignUpResponse signUp(SignUpRequest request) {
@@ -61,8 +66,18 @@ public class AuthService {
             CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
 
             // 인증 후, JwtUtil을 통해 AT, RT 발급
+            String AT = jwtUtil.createAT(principal.getMemberId(), principal.getRole());
+            String RT = jwtUtil.createRT(principal.getMemberId());
 
-            return null;
+            LoginResponse.AtInfo atInfo = LoginResponse.AtInfo.of(AT, "AT", jwtUtil.getAtValiditySeconds());
+            LoginResponse.RtInfo rtInfo = LoginResponse.RtInfo.of(RT, "RT", jwtUtil.getRtValiditySeconds());
+
+            // 인증객체를 통해 회원 조회
+            Member member = memberRepository.findById(principal.getMemberId())
+                    .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+            LoginResponse.MemberInfo memberInfo = LoginResponse.MemberInfo.from(member);
+
+            return LoginResponse.of(atInfo, rtInfo, memberInfo);
         } catch (BadCredentialsException e){
             throw new AuthException(AuthErrorCode.INVALID_CREDENTIALS);
         } catch (AuthenticationException e){

@@ -8,6 +8,7 @@ import com.ceos24.spring_cgv.domain.auth.exception.code.AuthSuccessCode;
 import com.ceos24.spring_cgv.domain.auth.service.AuthService;
 import com.ceos24.spring_cgv.global.apipayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class AuthController {
 
     private final AuthService authService;
 
+    @SecurityRequirements
     @Operation(summary = "회원가입", description = "새로운 회원가입을 진행합니다.")
     @PostMapping("/signup")
     public ApiResponse<SignUpResponse> signUp(
@@ -32,6 +34,7 @@ public class AuthController {
         return ApiResponse.onSuccess(AuthSuccessCode.SIGNUP_OK, authService.signUp(request));
     }
 
+    @SecurityRequirements
     @Operation(summary = "로그인", description = "로그인을 진행합니다.")
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(

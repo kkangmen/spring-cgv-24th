@@ -88,4 +88,29 @@ public class Payment {
         this.status = PaymentStatus.READY;
         this.requestedAt = LocalDateTime.now();
     }
+
+    /***
+     * 함수 기능: 토스 승인 응답을 반영해 결제를 완료 상태로 전이한다.
+     * @param paymentKey 토스가 발급한 결제 키
+     * @param method 결제 수단
+     * @param approvedAt 토스가 결제를 승인한 시각
+     * @param lastTransactionKey 마지막 거래의 키 값
+     */
+    public void confirm(String paymentKey, TossPaymentMethod method,
+                        LocalDateTime approvedAt, String lastTransactionKey) {
+
+        this.paymentKey = paymentKey;
+        this.method = method;
+        this.approvedAt = approvedAt;
+        this.lastTransactionKey = lastTransactionKey;
+        this.status = PaymentStatus.DONE;
+    }
+
+    /***
+     * 함수 기능: 결제가 실패하여 주문을 중단 상태로 전이한다.
+     *          토스가 failUrl로 리다이렉트했을 때 호출한다.
+     */
+    public void abort() {
+        this.status = PaymentStatus.ABORTED;
+    }
 }

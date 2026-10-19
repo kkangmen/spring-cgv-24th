@@ -7,16 +7,23 @@ import com.ceos24.spring_cgv.domain.member.repository.MemberRepository;
 import com.ceos24.spring_cgv.domain.movie.entity.ScreenType;
 import com.ceos24.spring_cgv.domain.movie.entity.Screening;
 import com.ceos24.spring_cgv.domain.movie.repository.ScreeningRepository;
+import com.ceos24.spring_cgv.domain.payment.client.TossPaymentClient;
 import com.ceos24.spring_cgv.domain.payment.dto.SeatPosition;
 import com.ceos24.spring_cgv.domain.payment.dto.request.PaymentReadyRequest;
+import com.ceos24.spring_cgv.domain.payment.dto.response.PaymentConfirmResponse;
 import com.ceos24.spring_cgv.domain.payment.dto.response.PaymentReadyResponse;
+import com.ceos24.spring_cgv.domain.payment.client.dto.TossPaymentConfirmResponse;
 import com.ceos24.spring_cgv.domain.payment.entity.Payment;
 import com.ceos24.spring_cgv.domain.payment.entity.PaymentSeat;
+import com.ceos24.spring_cgv.domain.payment.enums.TossPaymentMethod;
 import com.ceos24.spring_cgv.domain.payment.exception.PaymentException;
 import com.ceos24.spring_cgv.domain.payment.exception.code.PaymentErrorCode;
 import com.ceos24.spring_cgv.domain.payment.repository.PaymentRepository;
 import com.ceos24.spring_cgv.domain.payment.repository.PaymentSeatRepository;
+import com.ceos24.spring_cgv.domain.reservation.dto.ReservationSeatCommand;
+import com.ceos24.spring_cgv.domain.reservation.entity.Reservation;
 import com.ceos24.spring_cgv.domain.reservation.repository.ReservationSeatRepository;
+import com.ceos24.spring_cgv.domain.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,6 +48,8 @@ public class PaymentService {
     private final MemberRepository memberRepository;
     private final ScreeningRepository screeningRepository;
     private final ReservationSeatRepository reservationSeatRepository;
+    private final TossPaymentClient tossPaymentClient;
+    private final ReservationService reservationService;
 
     // 주문 번호 접두어.
     private static final String ORDER_ID_PREFIX = "cgv_";
@@ -113,6 +122,89 @@ public class PaymentService {
                 memberId, orderId, payment.getTotalAmount());
 
         return PaymentReadyResponse.from(payment);
+    }
+
+    /***
+     * 함수 기능: 좌석을 확정하고 토스에 결제 승인을 요청한다.
+     * @param paymentKey 토스가 발급한 결제 키
+     * @param orderId 서버가 생성한 주문 번호
+     * @param amount 토스가 리다이렉트 파라미터로 보낸 금액 (대조용으로만 쓴다)
+     * @return PaymentConfirmResponse 예매 ID, 주문 정보, 확정된 좌석
+     */
+    @Transactional
+    public PaymentConfirmResponse confirm(String paymentKey, String orderId, Integer amount) {
+
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_ORDER_NOT_FOUND));
+
+        // 결제 요청 응답으로 전달받은 amount와 DB에 저장한 금액과 대조한다.
+        if (!payment.getTotalAmount().equals(amount)) {
+            log.warn("[결제 금액 불일치] orderId={}, 저장된 금액={}, 전달된 금액={}",
+                    orderId, payment.getTotalAmount(), amount);
+            throw new PaymentException(PaymentErrorCode.PAYMENT_AMOUNT_MISMATCH);
+        }
+
+        List<PaymentSeat> paymentSeats = paymentSeatRepository.findAllByPaymentId(payment.getId());
+
+        // 좌석 예매를 확정하여 DB에 저장한다.
+        Reservation reservation = reservationService.reserve(
+                payment.getMember(),
+                payment.getScreening(),
+                payment.getTotalAmount(),
+                toSeatCommands(paymentSeats));
+
+        // 좌석을 확보한 뒤 토스에 결제 승인 요청을 보낸다.
+        TossPaymentConfirmResponse result =
+                tossPaymentClient.confirm(paymentKey, orderId, payment.getTotalAmount());
+
+        payment.confirm(
+                result.paymentKey(),
+                TossPaymentMethod.from(result.method()),
+                result.approvedAt().toLocalDateTime(),
+                result.lastTransactionKey());
+
+        log.info("[결제 승인 완료] orderId={}, reservationId={}, amount={}",
+                orderId, reservation.getId(), payment.getTotalAmount());
+
+        return PaymentConfirmResponse.of(payment, reservation, paymentSeats);
+    }
+
+    /***
+     * 함수 기능: 토스가 failUrl로 리다이렉트했을 때 주문을 중단 처리한다.
+     * @param code 토스 에러 코드
+     * @param message 토스 에러 메시지
+     * @param orderId 실패한 주문 번호 (주문 생성 전에 실패하면 없을 수 있다)
+     */
+    @Transactional
+    public void fail(String code, String message, String orderId) {
+
+        log.warn("[결제 실패] orderId={}, code={}, message={}", orderId, code, message);
+
+        if (orderId == null) {
+            return;
+        }
+
+        // TODO: 동시성 - 선점을 되살리면 여기서 seatHoldRepository.release(...)로 좌석을 풀어줘야 한다.
+        //       현재는 선점이 없으므로 할 일이 없다.
+        paymentRepository.findByOrderId(orderId)
+                .ifPresent(Payment::abort);
+    }
+
+    /***
+     * 함수 기능: 결제 좌석 스냅샷을 예매 생성 입력으로 변환한다.
+     *          ReservationService가 결제 도메인을 모르게 하려고 여기서 변환한다.
+     * @param paymentSeats 결제 시점에 기록한 좌석 스냅샷
+     * @return 예매 좌석 생성 명령 목록
+     */
+    private List<ReservationSeatCommand> toSeatCommands(List<PaymentSeat> paymentSeats) {
+
+        return paymentSeats.stream()
+                .map(seat -> new ReservationSeatCommand(
+                        seat.getSeatRow(),
+                        seat.getSeatNumber(),
+                        seat.getAgeGroup(),
+                        seat.getPrice()))
+                .toList();
     }
 
     /***

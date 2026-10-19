@@ -11,7 +11,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -55,11 +54,11 @@ public class Reservation {
     private LocalDateTime canceledAt;
 
     @Builder
-    private Reservation(Member member, Screening screening) {
+    private Reservation(Member member, Screening screening, Integer price) {
         this.member = member;
         this.screening = screening;
         this.status = ReservationStatus.RESERVED;
-        this.price = 0;
+        this.price = price;
         this.reservedAt = LocalDateTime.now();
     }
 }

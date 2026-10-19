@@ -21,11 +21,11 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(
-        name = "reservation_seat",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_reservation_seat_screening_row_number",
-                columnNames = {"screening_id", "seat_row", "seat_number"}
-        )
+        name = "reservation_seat"
+//        uniqueConstraints = @UniqueConstraint(
+//                name = "uk_reservation_seat_screening_row_number",
+//                columnNames = {"screening_id", "seat_row", "seat_number"}
+//        )
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
